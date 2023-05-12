@@ -1,11 +1,19 @@
-﻿#Install-Module CredentialManager
-#Install-Module ActiveDirectory
-
+﻿# Install required modules
+	#Install-Module CredentialManager
+	#Install-Module ActiveDirectory
+	
+# Get stored credentials from Credential Manager
 $cred = Get-StoredCredential -Target '' #complete with name of stored credential in credential manager
+
+# Set text encoding
 $textEncoding = [System.Text.Encoding]::UTF8
 
 #Get users from AD that are Enabled, have disabled option PasswordNeverExpires and Password is not Expired
-$users = get-aduser -filter * -properties Name, PasswordNeverExpires, PasswordExpired, PasswordLastSet, EmailAddress | where {$_.Enabled -eq "True"} | where { $_.PasswordNeverExpires -eq $false } | where { $_.passwordexpired -eq $false }
+$users = Get-ADUser -Filter * -Properties Name, PasswordNeverExpires, PasswordExpired, PasswordLastSet, EmailAddress |
+    Where-Object {$_.Enabled -eq "True"} |
+    Where-Object {$_.PasswordNeverExpires -eq $false} |
+    Where-Object {$_.PasswordExpired -eq $false}
+
 #Get the Domain Password Policy for users that we are not able to read password policy
 $DefaultmaxPasswordAge = (Get-ADDefaultDomainPasswordPolicy).MaxPasswordAge
 
@@ -18,12 +26,12 @@ foreach ($user in $users)
     if (($PasswordPol) -ne $null) {$maxPasswordAge = ($PasswordPol).MaxPasswordAge}
 	else {$maxPasswordAge = $DefaultmaxPasswordAge}
 
-#Days To Expire
+# Calculate days to password expiration
     $expireson = $passwordsetdate + $maxPasswordAge
     $today = (get-date)
     $daystoexpire = (New-TimeSpan -Start $today -End $Expireson).Days
 
-#Message
+# Construct message based on days to expiration
     if (($daystoexpire) -gt "1")
     {
         $messageDays1 = "wygaśnie za " + "<b>$daystoexpire</b>" + " dni."
@@ -57,7 +65,7 @@ foreach ($user in $users)
 			UseSSL			= $true # or not if using non-TLS
 			Credential		= $cred
 			From			= '' #complete with from address
-			To				= $emailaddress
+			To			= $emailaddress
 			Subject			= $subject
 			Body			= $body
 			Priority		= 'High'
