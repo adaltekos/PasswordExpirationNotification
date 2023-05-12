@@ -1,5 +1,6 @@
 # Password Expiration Notification Script
 
+## Description
 This PowerShell script retrieves a list of enabled Active Directory users whose password is not set to never expire and whose password has not yet expired. For each user, the script calculates the number of days until the password expires based on the maximum password age policy, and sends an email notification if the number of days matches a specified set of values (0, 1, 3, or 7).
 
 The notification email reminds the user to change their password before it expires, provides instructions on how to change the password, and warns about the consequences of not changing the password before expiration.
